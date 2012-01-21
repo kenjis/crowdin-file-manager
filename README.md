@@ -16,11 +16,11 @@ Crowdin is a collaborative translation tool.
 
 2. Check File Status
 
-	$ oil r file:check
+	$ php oil r file:check
 
 3. Add/Upload Files to Crowdin
 
-	$ oil r file:update
+	$ php oil r file:update
 
 	Note: Crowdin API response is sometimes very slow. 
 		So 10 files are processed at one time.
