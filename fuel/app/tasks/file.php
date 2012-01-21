@@ -442,6 +442,11 @@ EOL;
 	
 	private static function exists_directory($dir)
 	{
+		if ($dir === '.')
+		{
+			return true;
+		}
+		
 		$dirs  = explode('/', $dir);
 		$count = count($dirs);
 		
