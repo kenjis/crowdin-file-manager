@@ -1,6 +1,6 @@
 # Crowdin File Manager
 
-This is CLI application to manage "Crowdin.net" project files using Crowdin Web API.
+This is a CLI application to manage "Crowdin.net" project files using Crowdin Web API.
 
 You can add and update files to translate to your Crowdin project.
 
@@ -24,6 +24,10 @@ Crowdin is a collaborative translation tool.
 
 	Note: Crowdin API response is sometimes very slow. 
 		So 10 files are processed at one time.
+
+## License
+
+See "fuel/LICENSE"
 
 ## Reference
 
