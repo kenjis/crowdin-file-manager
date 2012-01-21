@@ -62,7 +62,12 @@ EOL;
 	 */
 	public static function update()
 	{
+		$start = microtime(true);
 		static::_update(true);
+		$end = microtime(true);
+		
+		$sec = intval($end - $start);
+		echo $sec . ' seconds' . "\n";
 	}
 	
 	/**
@@ -260,6 +265,12 @@ EOL;
 	
 	private static function add_file($file, $local_path)
 	{
+		// check if directory exists?
+		if ( ! static::exists_directory(dirname($file)))
+		{
+			static::add_directory($file);
+		}
+		
 		$request_url = static::$api_url .
 						'/add-file?key=' . static::$project_key . '&type=' .
 						static::$file_type['type'];
@@ -429,12 +440,67 @@ EOL;
 		);
 	}
 	
+	private static function exists_directory($dir)
+	{
+		$dirs  = explode('/', $dir);
+		$count = count($dirs);
+		
+		foreach (static::$cached_data as $file => $data)
+		{
+			$cached_dir  = dirname($file);
+			$cached_dirs = explode('/', $cached_dir);
+			
+			if (count($cached_dirs) < $count)
+			{
+				continue;
+			}
+			
+			$dir_exists = '';
+			for ($i = 0; $i < $count; $i++)
+			{
+				$dir_exists .= $cached_dirs[$i] . '/';
+			}
+			$dir_exists = rtrim($dir_exists, '/');
+			
+			if ($dir_exists === $dir)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private static function add_directory($file)
 	{
+		$dir = dirname($file);
+		
+		if (static::exists_directory($dir))
+		{
+			return true;
+		}
+		
+		// add parent directory first
+		$dirs  = explode('/', $dir);
+		$count = count($dirs);
+		if ($count > 1)
+		{
+			for ($i = 0; $i < $count - 1; $i++)
+			{
+				$new_dir = '';
+				for ($j = 0; $j < $i + 1; $j++)
+				{
+					$new_dir .= $dirs[$j] . '/';
+				}
+				$new_dir .= 'dummy';
+				static::add_directory($new_dir);
+			}
+		}
+		
+		// add directory
 		$request_url = static::$api_url .
 							'/add-directory?key=' . static::$project_key;
 		$post_params = array();
-		$post_params['name'] = dirname($file);
+		$post_params['name'] = $dir;
 		
 		//var_dump($request_url);
 		//var_dump($post_params);
