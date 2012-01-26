@@ -32,8 +32,9 @@ class File
 	{
 		echo <<<EOL
 Usage:
-  oil refine file:check  ... check status of local files
-  oil refine file:update ... update files using Web API
+  oil refine file:check    ... check status of local files
+  oil refine file:update   ... update files using Web API
+  oil refine file:filelist ... show all file list
 EOL;
 	}
 
@@ -81,6 +82,29 @@ EOL;
 	public static function check()
 	{
 		static::_update(false);
+	}
+	
+	/**
+	* Show All File List
+	*
+	* Usage (from command line):
+	*   php oil r file:filelist
+	*
+	* @return string  file list
+	*/
+	public static function filelist()
+	{
+		static::get_config();
+		$docs_dir = static::$docs_dir;
+		
+		$list = \File::read_dir($docs_dir);
+		$list = static::convert_filelist($list);
+		//var_dump($list);
+		
+		foreach ($list as $file)
+		{
+			echo $file . "\n";
+		}
 	}
 	
 	private static function _update($commit = false)
