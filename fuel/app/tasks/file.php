@@ -35,6 +35,7 @@ Usage:
   oil refine file:check    ... check status of local files
   oil refine file:update   ... update files using Web API
   oil refine file:filelist ... show all file list
+  oil refine file:glossary ... show glossary at Crowdin
 EOL;
 	}
 
@@ -104,6 +105,44 @@ EOL;
 		foreach ($list as $file)
 		{
 			echo $file . "\n";
+		}
+	}
+	
+	/**
+	 * Show Glossary at Crowdin
+	 * 
+	 * @return string
+	 */
+	public static function glossary()
+	{
+		static::get_config();
+		
+		$glossary = static::download_glossary();
+
+		if ($glossary === false)
+		{
+			echo 'Can\'t download glossary.';
+			return;
+		}
+
+		$xml = simplexml_load_string($glossary);
+		//var_dump($xml);
+		
+		foreach ($xml->text->body->termEntry as $item)
+		{
+			$term        = (string) $item->langSet[0]->tig->term;
+			$translation = (string) $item->langSet[1]->tig->term;
+			$note        = (string) $item->langSet[1]->note;
+			
+			echo '* ' . $term . ' -> ' . $translation;
+			if ($note)
+			{
+				echo ' (' . $note . ')' . "\n";
+			}
+			else
+			{
+				echo "\n";
+			}
 		}
 	}
 	
@@ -377,6 +416,18 @@ EOL;
 		return $result;
 	}
 	
+	private static function get_from_api($url)
+	{
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		
+		$result = curl_exec($ch);
+		curl_close($ch);
+		
+		return $result;
+	}
+	
 	private static function update_file($file, $local_path)
 	{
 		$request_url = static::$api_url .
@@ -558,6 +609,38 @@ EOL;
 		else
 		{
 			return true;
+		}
+	}
+	
+	/**
+	 * http://crowdin.net/page/api/download-glossary
+	 */
+	private static function download_glossary()
+	{
+		$request_url = static::$api_url .
+									'/download-glossary?key=' . static::$project_key;
+		$result = static::get_from_api($request_url);
+		//var_dump($result);
+		
+		if ($result === false)
+		{
+			static::log_api_access_error(__METHOD__);
+			return false;
+		}
+		else if (strpos($result, '<error>'))
+		{
+			$sxml = simplexml_load_string($result);
+		
+			$code = (string) $sxml->code;
+			$msg = 'crowdin api error: download glossary: code:' . $code . ' msg:' .
+			(string) $sxml->message;
+			\Log::error($msg, __METHOD__);
+			static::unbuffered_echo($msg . "\n");
+			return false;
+		}
+		else
+		{
+			return $result;
 		}
 	}
 }
